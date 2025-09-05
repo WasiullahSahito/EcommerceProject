@@ -2,73 +2,53 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { allProducts, sidebarCategories as categories } from '../../utils/mockData';
 import ProductGridCard from '../../components/ProductGridCard/ProductGridCard';
+import ProductListCard from '../../components/ProductListCard/ProductListCard'; // Import the new component
 import { FaTh, FaList } from 'react-icons/fa';
 
 const ProductsPage = () => {
     const [searchParams] = useSearchParams();
 
-    // State to hold the products that are currently displayed
     const [filteredProducts, setFilteredProducts] = useState(allProducts);
-
-    // State for each filter criteria
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [price, setPrice] = useState(75000);
     const [searchTerm, setSearchTerm] = useState('');
+    const [view, setView] = useState('grid'); // State for grid/list view
 
-    // This effect runs when the component mounts or URL search params change
     useEffect(() => {
         const initialCategory = searchParams.get('category');
         const initialSearch = searchParams.get('search');
-
-        // Pre-select category if it comes from the URL
-        if (initialCategory) {
-            setSelectedCategories([initialCategory]);
-        }
-        // Set search term if it comes from the URL
-        if (initialSearch) {
-            setSearchTerm(initialSearch);
-        }
+        if (initialCategory) setSelectedCategories([initialCategory]);
+        if (initialSearch) setSearchTerm(initialSearch);
     }, [searchParams]);
 
-    // This is the core filtering logic. It runs whenever any filter state changes.
     useEffect(() => {
         let result = allProducts;
-
-        // 1. Filter by search term
         if (searchTerm) {
             result = result.filter(product =>
                 product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 product.brand.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
-
-        // 2. Filter by selected categories
         if (selectedCategories.length > 0) {
             result = result.filter(product =>
                 selectedCategories.includes(product.category.toLowerCase())
             );
         }
-
-        // 3. Filter by price
         result = result.filter(product => product.price <= price);
-
         setFilteredProducts(result);
-    }, [selectedCategories, price, searchTerm, allProducts]);
+    }, [selectedCategories, price, searchTerm]);
 
-    // Handler for category checkbox changes
     const handleCategoryChange = (e) => {
         const category = e.target.value;
         setSelectedCategories(prev =>
-            e.target.checked
-                ? [...prev, category]
-                : prev.filter(c => c !== category)
+            e.target.checked ? [...prev, category] : prev.filter(c => c !== category)
         );
     };
 
     return (
-        <div className="container mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
+        <div className="container mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
             {/* Sidebar */}
-            <aside className="w-full md:w-1/4">
+            <aside className="w-full lg:w-1/4">
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                     <h3 className="font-bold text-lg mb-4 border-b pb-2">Filters</h3>
                     <div>
@@ -94,7 +74,7 @@ const ProductsPage = () => {
                         <input
                             type="range"
                             min="0"
-                            max="75000"
+                            max="85000" // Increased max price for new products
                             value={price}
                             onChange={(e) => setPrice(Number(e.target.value))}
                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primeColor"
@@ -107,19 +87,34 @@ const ProductsPage = () => {
                 </div>
             </aside>
             {/* Main Content */}
-            <main className="w-full md:w-3/4">
+            <main className="w-full lg:w-3/4">
                 <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm">
                     <p className="text-gray-600">{filteredProducts.length} products found</p>
+                    {/* View Toggle Buttons */}
                     <div className="flex items-center gap-2">
-                        <button className="p-2 rounded-md bg-primeColor text-white"><FaTh /></button>
-                        <button className="p-2 rounded-md border text-gray-500 hover:bg-gray-100"><FaList /></button>
+                        <button onClick={() => setView('grid')} className={`p-2 rounded-md ${view === 'grid' ? 'bg-primeColor text-white' : 'border bg-white text-gray-500 hover:bg-gray-100'}`}>
+                            <FaTh />
+                        </button>
+                        <button onClick={() => setView('list')} className={`p-2 rounded-md ${view === 'list' ? 'bg-primeColor text-white' : 'border bg-white text-gray-500 hover:bg-gray-100'}`}>
+                            <FaList />
+                        </button>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredProducts.map(product => (
-                        <ProductGridCard key={product.id} product={product} />
-                    ))}
-                </div>
+
+                {/* Conditional Rendering for Grid or List View */}
+                {view === 'grid' ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {filteredProducts.map(product => (
+                            <ProductGridCard key={product.id} product={product} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-6">
+                        {filteredProducts.map(product => (
+                            <ProductListCard key={product.id} product={product} />
+                        ))}
+                    </div>
+                )}
             </main>
         </div>
     );

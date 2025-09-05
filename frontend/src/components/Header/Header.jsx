@@ -4,19 +4,17 @@ import { FaSearch, FaHeart, FaShoppingCart, FaBars, FaChevronDown, FaRocket } fr
 import { ShopContext } from '../../context/ShopContext';
 
 const Header = ({ onOpenSidebar }) => {
-    const { getTotalCartItems, wishlistItems } = useContext(ShopContext);
-    const totalCartItems = getTotalCartItems();
+    // FIX: Destructure cartItems directly to make the component re-render when it changes.
+    const { cartItems, wishlistItems } = useContext(ShopContext);
+    const navigate = useNavigate();
+    const [searchTerm, setSearchTerm] = useState("");
+
+    // Calculate total items directly from the cartItems state
+    const totalCartItems = Object.values(cartItems).reduce((acc, quantity) => acc + quantity, 0);
     const totalWishlistItems = wishlistItems.length;
 
-    // State to manage the text inside the search input
-    const [searchTerm, setSearchTerm] = useState("");
-    const navigate = useNavigate();
-
-    // Function to handle the search submission
     const handleSearch = (e) => {
-        // Prevent the form from reloading the page
         e.preventDefault();
-        // If the search term is not empty, navigate to the products page with a search query
         if (searchTerm.trim()) {
             navigate(`/products?search=${searchTerm.trim()}`);
         }
@@ -24,7 +22,15 @@ const Header = ({ onOpenSidebar }) => {
 
     return (
         <header className="bg-white shadow-sm sticky top-0 z-30">
-            {/* Top promotional bar removed to match the screenshot */}
+            <div className="bg-gray-100 text-xs text-gray-600">
+                <div className="container mx-auto px-4 py-1 flex justify-between items-center">
+                    <span>Get up to 50% off new season styles, limited time only</span>
+                    <div>
+                        <a href="#" className="px-2 border-r">Help Center</a>
+                        <a href="#" className="px-2">Order Tracking</a>
+                    </div>
+                </div>
+            </div>
 
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                 <Link to="/" className="flex items-center gap-2 text-3xl font-bold text-gray-800">
@@ -32,7 +38,6 @@ const Header = ({ onOpenSidebar }) => {
                     <span className="text-2xl">CLASSYSHOP</span>
                 </Link>
 
-                {/* Search Form - Fully Functional */}
                 <form onSubmit={handleSearch} className="flex-1 max-w-xl mx-8">
                     <div className="relative">
                         <input
